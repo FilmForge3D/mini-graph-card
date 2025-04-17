@@ -154,35 +154,35 @@ export default class Graph {
   }
 
   computeGradient(thresholds, logarithmic) {
-    const scale = logarithmic
-      ? Math.log10(Math.max(1, this._max)) - Math.log10(Math.max(1, this._min))
-      : this._max - this._min;
+  const scale = logarithmic
+    ? Math.log10(Math.max(1, this._max)) - Math.log10(Math.max(1, this._min))
+    : this._max - this._min;
 
-    return thresholds.map((stop, index, arr) => {
-      let color;
-      if (stop.value > this._max && arr[index + 1]) {
-        const factor = (this._max - arr[index + 1].value) / (stop.value - arr[index + 1].value);
-        color = interpolateColor(arr[index + 1].color, stop.color, factor);
-      } else if (stop.value < this._min && arr[index - 1]) {
-        const factor = (arr[index - 1].value - this._min) / (arr[index - 1].value - stop.value);
-        color = interpolateColor(arr[index - 1].color, stop.color, factor);
-      }
-      let offset;
-      if (scale <= 0) {
-        offset = 0;
-      } else if (logarithmic) {
-        offset = (Math.log10(Math.max(1, this._max))
-          - Math.log10(Math.max(1, stop.value)))
-          * (100 / scale);
-      } else {
-        offset = (this._max - stop.value) * (100 / scale);
-      }
-      return {
-        color: color || stop.color,
-        offset,
-      };
-    });
-  }
+  return thresholds.map((stop) => {
+    let color = stop.color;
+
+    if (stop.value > this._max) {
+      color = stop.color; // clamp
+    } else if (stop.value < this._min) {
+      color = stop.color; // clamp
+    }
+
+    let offset;
+    if (scale <= 0) {
+      offset = 0;
+    } else if (logarithmic) {
+      offset = (Math.log10(Math.max(1, this._max)) - Math.log10(Math.max(1, stop.value))) * (100 / scale);
+    } else {
+      offset = (this._max - stop.value) * (100 / scale);
+    }
+
+    return {
+      color,
+      offset,
+    };
+  });
+}
+
 
   getFill(path) {
     const height = this.height + this.margin[Y] * 4;
